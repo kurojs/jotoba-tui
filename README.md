@@ -14,7 +14,7 @@ Built with [Bubbletea](https://github.com/charmbracelet/bubbletea) and [Lipgloss
 ## Installation
 
 ```bash
-git clone https://github.com/anomalyco/jotoba-tui.git
+git clone https://github.com/kurojs/jotoba-tui.git
 cd jotoba-tui
 go build -o jotoba-tui .
 ```
