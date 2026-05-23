@@ -28,10 +28,23 @@ type errorMsg struct {
 
 type tickMsg struct{}
 
+var languages = []string{
+	"English",
+	"German",
+	"Spanish",
+	"French",
+	"Russian",
+	"Swedish",
+	"Dutch",
+	"Hungarian",
+	"Slovenian",
+}
+
 type model struct {
 	textInput   textinput.Model
 	spinner     spinner.Model
 	mode        searchMode
+	langIndex   int
 	wordResults []jotoba.WordResult
 	kanjiResults []jotoba.KanjiResult
 	sentenceResults []jotoba.SentenceResult
@@ -92,5 +105,6 @@ func New() tea.Model {
 	return model{
 		textInput: ti,
 		spinner:   s,
+		langIndex: 0,
 	}
 }

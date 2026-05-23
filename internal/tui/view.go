@@ -30,6 +30,12 @@ func (m model) View() string {
 	b.WriteString(hintStyle.Render(" — Japanese Dictionary"))
 	b.WriteString("\n\n")
 
+	lang := languages[m.langIndex]
+	b.WriteString("  ")
+	b.WriteString(tabActiveStyle.Render(lang))
+	b.WriteString(hintStyle.Render("  (Ctrl+L to change)"))
+	b.WriteString("\n")
+
 	b.WriteString("  ")
 	for i := range 3 {
 		if searchMode(i) == m.mode {

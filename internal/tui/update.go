@@ -20,23 +20,23 @@ func (m model) Init() tea.Cmd {
 	return tea.Batch(textinput.Blink, m.spinner.Tick, tickCmd())
 }
 
-func searchCmd(query string, mode searchMode) tea.Cmd {
+func searchCmd(query string, mode searchMode, language string) tea.Cmd {
 	return func() tea.Msg {
 		switch mode {
 		case modeWord:
-			results, err := jotoba.SearchWords(query, "Spanish")
+			results, err := jotoba.SearchWords(query, language)
 			if err != nil {
 				return errorMsg{err}
 			}
 			return searchResultMsg{mode: mode, results: results}
 		case modeKanji:
-			results, err := jotoba.SearchKanji(query, "Spanish")
+			results, err := jotoba.SearchKanji(query, language)
 			if err != nil {
 				return errorMsg{err}
 			}
 			return searchResultMsg{mode: mode, results: results}
 		case modeSentence:
-			results, err := jotoba.SearchSentences(query, "Spanish")
+			results, err := jotoba.SearchSentences(query, language)
 			if err != nil {
 				return errorMsg{err}
 			}
@@ -67,6 +67,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = nil
 			m.textInput.SetValue("")
 			return m, tickCmd()
+		case tea.KeyCtrlL:
+			m.langIndex = (m.langIndex + 1) % len(languages)
+			m.wordResults = nil
+			m.kanjiResults = nil
+			m.sentenceResults = nil
+			m.err = nil
+			m.textInput.SetValue("")
+			return m, tickCmd()
 		case tea.KeyEnter:
 			query := strings.TrimSpace(m.textInput.Value())
 			if query != "" && !m.loading {
@@ -78,7 +86,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.err = nil
 				return m, tea.Batch(
 					m.spinner.Tick,
-					searchCmd(query, m.mode),
+					searchCmd(query, m.mode, languages[m.langIndex]),
 				)
 			}
 		}

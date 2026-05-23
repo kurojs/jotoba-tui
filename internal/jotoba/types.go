@@ -50,12 +50,9 @@ type jotobaKanjiResponse struct {
 }
 
 type jotobaSentence struct {
-	Content string `json:"content"`
-	Furigana string `json:"furigana"`
-	Translation struct {
-		English string `json:"en"`
-		Spanish string `json:"es"`
-	} `json:"translation"`
+	Content     string            `json:"content"`
+	Furigana    string            `json:"furigana"`
+	Translation map[string]string `json:"translation"`
 }
 
 type jotobaSentencesResponse struct {

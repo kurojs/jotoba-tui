@@ -133,8 +133,11 @@ func TestParseSentencesResponse(t *testing.T) {
 	if s.Content != "私はりんごを食べます。" {
 		t.Errorf("unexpected content: %s", s.Content)
 	}
-	if s.Translation.English != "I eat an apple." {
-		t.Errorf("unexpected translation: %s", s.Translation.English)
+	if s.Translation["en"] != "I eat an apple." {
+		t.Errorf("unexpected en translation: %s", s.Translation["en"])
+	}
+	if s.Translation["es"] != "Yo como una manzana." {
+		t.Errorf("unexpected es translation: %s", s.Translation["es"])
 	}
 }
 

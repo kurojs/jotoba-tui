@@ -20,6 +20,9 @@ func TestInitialModel(t *testing.T) {
 	if m.loading {
 		t.Error("expected loading to be false")
 	}
+	if m.langIndex != 0 {
+		t.Errorf("expected langIndex 0 (English), got %d", m.langIndex)
+	}
 }
 
 func TestTabSwitchesMode(t *testing.T) {
@@ -46,6 +49,26 @@ func TestTabClearsResults(t *testing.T) {
 
 	if len(m.wordResults) != 0 {
 		t.Error("expected word results to be cleared on tab switch")
+	}
+}
+
+func TestCtrlLCyclesLanguage(t *testing.T) {
+	m := New().(model)
+	if languages[m.langIndex] != "English" {
+		t.Fatalf("expected English, got %s", languages[m.langIndex])
+	}
+
+	keyMsg := tea.KeyMsg{Type: tea.KeyCtrlL}
+	for i := range len(languages) {
+		m2, _ := m.Update(keyMsg)
+		m = m2.(model)
+		if languages[m.langIndex] != languages[(i+1)%len(languages)] {
+			t.Errorf("step %d: expected %s, got %s", i, languages[(i+1)%len(languages)], languages[m.langIndex])
+		}
+	}
+
+	if languages[m.langIndex] != "English" {
+		t.Errorf("expected wrap to English, got %s", languages[m.langIndex])
 	}
 }
 

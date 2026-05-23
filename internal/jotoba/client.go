@@ -150,6 +150,29 @@ func SearchKanji(query, language string) ([]KanjiResult, error) {
 	return results, nil
 }
 
+func langToCode(language string) string {
+	switch language {
+	case "Spanish":
+		return "es"
+	case "German":
+		return "de"
+	case "French":
+		return "fr"
+	case "Russian":
+		return "ru"
+	case "Swedish":
+		return "sv"
+	case "Dutch":
+		return "nl"
+	case "Hungarian":
+		return "hu"
+	case "Slovenian":
+		return "sl"
+	default:
+		return "en"
+	}
+}
+
 func SearchSentences(query, language string) ([]SentenceResult, error) {
 	var resp jotobaSentencesResponse
 	if err := postJSON("/api/search/sentences", query, &resp, language); err != nil {
@@ -160,11 +183,13 @@ func SearchSentences(query, language string) ([]SentenceResult, error) {
 		return nil, nil
 	}
 
+	code := langToCode(language)
+
 	results := make([]SentenceResult, 0, len(resp.Sentences))
 	for _, s := range resp.Sentences {
-		translation := s.Translation.English
-		if language == "Spanish" && s.Translation.Spanish != "" {
-			translation = s.Translation.Spanish
+		translation := s.Translation["en"]
+		if t, ok := s.Translation[code]; ok && t != "" && code != "en" {
+			translation = t
 		}
 
 		results = append(results, SentenceResult{
