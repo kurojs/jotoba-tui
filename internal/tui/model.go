@@ -6,8 +6,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"kurojs.com/jotoba-tui/internal/config"
-	"kurojs.com/jotoba-tui/internal/jotoba"
+	"github.com/kurojs/jotoba-tui/internal/config"
+	"github.com/kurojs/jotoba-tui/internal/jotoba"
 )
 
 type searchMode int

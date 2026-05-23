@@ -5,7 +5,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"kurojs.com/jotoba-tui/internal/tui"
+	"github.com/kurojs/jotoba-tui/internal/tui"
 )
 
 func main() {

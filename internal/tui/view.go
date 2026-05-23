@@ -7,7 +7,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"kurojs.com/jotoba-tui/internal/jotoba"
+	"github.com/kurojs/jotoba-tui/internal/jotoba"
 )
 
 const headerLines = 8

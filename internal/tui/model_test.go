@@ -5,7 +5,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"kurojs.com/jotoba-tui/internal/jotoba"
+	"github.com/kurojs/jotoba-tui/internal/jotoba"
 )
 
 func TestInitialModel(t *testing.T) {

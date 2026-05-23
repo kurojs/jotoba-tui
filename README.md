@@ -26,7 +26,7 @@ yay -S jotoba-tui
 ### macOS / Windows (Go)
 
 ```bash
-go install kurojs.com/jotoba-tui/cmd/jotoba@latest
+go install github.com/kurojs/jotoba-tui/cmd/jotoba@latest
 ```
 
 Make sure `$GOPATH/bin` (or `$HOME/go/bin`) is in your PATH.

@@ -7,8 +7,8 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
-	"kurojs.com/jotoba-tui/internal/config"
-	"kurojs.com/jotoba-tui/internal/jotoba"
+	"github.com/kurojs/jotoba-tui/internal/config"
+	"github.com/kurojs/jotoba-tui/internal/jotoba"
 )
 
 func tickCmd() tea.Cmd {

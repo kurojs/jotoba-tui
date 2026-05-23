@@ -1,4 +1,4 @@
-module kurojs.com/jotoba-tui
+module github.com/kurojs/jotoba-tui
 
 go 1.26.3
 
