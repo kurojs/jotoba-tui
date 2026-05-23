@@ -1,4 +1,4 @@
-module jotoba-tui
+module kurojs.com/jotoba-tui
 
 go 1.26.3
 
