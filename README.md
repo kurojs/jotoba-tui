@@ -23,7 +23,15 @@ Built with [Bubbletea](https://github.com/charmbracelet/bubbletea) and [Lipgloss
 yay -S jotoba-tui
 ```
 
-### From source
+### macOS / Windows (Go)
+
+```bash
+go install kurojs.com/jotoba-tui/cmd/jotoba@latest
+```
+
+Make sure `$GOPATH/bin` (or `$HOME/go/bin`) is in your PATH.
+
+### Build from source
 
 ```bash
 git clone https://github.com/kurojs/jotoba-tui.git
