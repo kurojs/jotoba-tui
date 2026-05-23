@@ -56,6 +56,10 @@ func (e *modeError) Error() string { return e.msg }
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.showLangMenu {
+			return m.updateLangMenu(msg)
+		}
+
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
@@ -66,15 +70,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.sentenceResults = nil
 			m.err = nil
 			m.textInput.SetValue("")
-			return m, tickCmd()
 		case tea.KeyCtrlL:
-			m.langIndex = (m.langIndex + 1) % len(languages)
-			m.wordResults = nil
-			m.kanjiResults = nil
-			m.sentenceResults = nil
-			m.err = nil
-			m.textInput.SetValue("")
-			return m, tickCmd()
+			m.showLangMenu = true
+			m.langCursor = m.langIndex
 		case tea.KeyEnter:
 			query := strings.TrimSpace(m.textInput.Value())
 			if query != "" && !m.loading {
@@ -106,11 +104,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.sentenceResults = r
 			}
 		}
-		return m, tickCmd()
 	case errorMsg:
 		m.loading = false
 		m.err = msg.err
-		return m, tickCmd()
 	case tickMsg:
 		m.frame++
 		return m, tickCmd()
@@ -123,4 +119,28 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.spinner, spinnerCmd = m.spinner.Update(msg)
 
 	return m, tea.Batch(cmd, spinnerCmd)
+}
+
+func (m model) updateLangMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.Type {
+	case tea.KeyEsc:
+		m.showLangMenu = false
+	case tea.KeyEnter:
+		m.langIndex = m.langCursor
+		m.showLangMenu = false
+		m.wordResults = nil
+		m.kanjiResults = nil
+		m.sentenceResults = nil
+		m.err = nil
+		m.textInput.SetValue("")
+	case tea.KeyUp:
+		if m.langCursor > 0 {
+			m.langCursor--
+		}
+	case tea.KeyDown:
+		if m.langCursor < len(languages)-1 {
+			m.langCursor++
+		}
+	}
+	return m, nil
 }

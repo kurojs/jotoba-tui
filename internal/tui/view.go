@@ -30,12 +30,6 @@ func (m model) View() string {
 	b.WriteString(hintStyle.Render(" — Japanese Dictionary"))
 	b.WriteString("\n\n")
 
-	lang := languages[m.langIndex]
-	b.WriteString("  ")
-	b.WriteString(tabActiveStyle.Render(lang))
-	b.WriteString(hintStyle.Render("  (Ctrl+L to change)"))
-	b.WriteString("\n")
-
 	b.WriteString("  ")
 	for i := range 3 {
 		if searchMode(i) == m.mode {
@@ -46,7 +40,17 @@ func (m model) View() string {
 		b.WriteString("  ")
 	}
 	b.WriteString(hintStyle.Render("(Tab to switch)"))
+	b.WriteString("\n")
+
+	b.WriteString("  ")
+	b.WriteString(tabStyle.Render(languages[m.langIndex]))
+	b.WriteString(hintStyle.Render("  (Ctrl+L)"))
 	b.WriteString("\n\n")
+
+	if m.showLangMenu {
+		m.renderLangMenu(&b)
+		return b.String()
+	}
 
 	b.WriteString(m.textInput.View())
 	b.WriteString("\n")
@@ -62,7 +66,7 @@ func (m model) View() string {
 		b.WriteString("\n")
 		b.WriteString(errorStyle.Render("  Error: " + m.err.Error()))
 		b.WriteString("\n\n")
-		b.WriteString(hintStyle.Render("  Press Esc to clear"))
+		b.WriteString(hintStyle.Render("  Press Esc to return"))
 		return b.String()
 	}
 
@@ -82,6 +86,29 @@ func (m model) View() string {
 	b.WriteString(hintStyle.Render("  Ctrl+C / Esc to quit"))
 
 	return b.String()
+}
+
+func (m model) renderLangMenu(b *strings.Builder) {
+	b.WriteString(menuTitleStyle.Render("  Language"))
+	b.WriteString("\n\n")
+
+	for i, lang := range languages {
+		cursor := "  "
+		if i == m.langCursor {
+			cursor = menuCursorStyle.Render(" >")
+		}
+
+		label := menuItemStyle.Render(lang)
+		if i == m.langIndex {
+			label = menuActiveStyle.Render(lang + "  (current)")
+		}
+
+		b.WriteString(fmt.Sprintf("  %s  %s", cursor, label))
+		b.WriteString("\n")
+	}
+
+	b.WriteString("\n")
+	b.WriteString(menuDimStyle.Render("  Up/Down  select   Enter  confirm   Esc  cancel"))
 }
 
 func (m model) renderWordResults(b *strings.Builder) {

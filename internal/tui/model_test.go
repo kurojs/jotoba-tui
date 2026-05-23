@@ -23,6 +23,9 @@ func TestInitialModel(t *testing.T) {
 	if m.langIndex != 0 {
 		t.Errorf("expected langIndex 0 (English), got %d", m.langIndex)
 	}
+	if m.showLangMenu {
+		t.Error("expected lang menu to be hidden")
+	}
 }
 
 func TestTabSwitchesMode(t *testing.T) {
@@ -52,23 +55,70 @@ func TestTabClearsResults(t *testing.T) {
 	}
 }
 
-func TestCtrlLCyclesLanguage(t *testing.T) {
+func TestCtrlLOpensLangMenu(t *testing.T) {
 	m := New().(model)
-	if languages[m.langIndex] != "English" {
-		t.Fatalf("expected English, got %s", languages[m.langIndex])
+
+	result, _ := m.Update(tea.KeyMsg{Type: tea.KeyCtrlL})
+	m2 := result.(model)
+
+	if !m2.showLangMenu {
+		t.Error("expected lang menu to be open after Ctrl+L")
+	}
+}
+
+func TestLangMenuEscCloses(t *testing.T) {
+	m := New().(model)
+	m.showLangMenu = true
+
+	result, _ := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	m2 := result.(model)
+
+	if m2.showLangMenu {
+		t.Error("expected lang menu to close on Esc")
+	}
+}
+
+func TestLangMenuSelectChangesLanguage(t *testing.T) {
+	m := New().(model)
+	m.showLangMenu = true
+	m.langCursor = 2
+
+	result, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m2 := result.(model)
+
+	if m2.showLangMenu {
+		t.Error("expected lang menu to close on Enter")
+	}
+	if m2.langIndex != 2 {
+		t.Errorf("expected langIndex 2 (Spanish), got %d", m2.langIndex)
+	}
+}
+
+func TestLangMenuUpDown(t *testing.T) {
+	m := New().(model)
+	m.showLangMenu = true
+	m.langCursor = 1
+
+	result, _ := m.Update(tea.KeyMsg{Type: tea.KeyUp})
+	if result.(model).langCursor != 0 {
+		t.Error("expected cursor to move up")
 	}
 
-	keyMsg := tea.KeyMsg{Type: tea.KeyCtrlL}
-	for i := range len(languages) {
-		m2, _ := m.Update(keyMsg)
-		m = m2.(model)
-		if languages[m.langIndex] != languages[(i+1)%len(languages)] {
-			t.Errorf("step %d: expected %s, got %s", i, languages[(i+1)%len(languages)], languages[m.langIndex])
-		}
+	m.langCursor = 1
+	result, _ = m.Update(tea.KeyMsg{Type: tea.KeyDown})
+	if result.(model).langCursor != 2 {
+		t.Error("expected cursor to move down")
 	}
+}
 
-	if languages[m.langIndex] != "English" {
-		t.Errorf("expected wrap to English, got %s", languages[m.langIndex])
+func TestLangMenuUpStaysAtZero(t *testing.T) {
+	m := New().(model)
+	m.showLangMenu = true
+	m.langCursor = 0
+
+	result, _ := m.Update(tea.KeyMsg{Type: tea.KeyUp})
+	if result.(model).langCursor != 0 {
+		t.Error("expected cursor to stay at 0")
 	}
 }
 
@@ -115,12 +165,23 @@ func TestCtrlCQuits(t *testing.T) {
 	}
 }
 
-func TestEscQuits(t *testing.T) {
+func TestEscFromMainViewQuits(t *testing.T) {
 	m := New().(model)
 	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
 
 	if cmd == nil {
 		t.Fatal("expected quit command")
+	}
+}
+
+func TestEscFromLangMenuDoesNotQuit(t *testing.T) {
+	m := New().(model)
+	m.showLangMenu = true
+
+	_, cmd := m.Update(tea.KeyMsg{Type: tea.KeyEsc})
+
+	if cmd != nil {
+		t.Error("expected no quit command from lang menu Esc")
 	}
 }
 

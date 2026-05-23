@@ -45,6 +45,8 @@ type model struct {
 	spinner     spinner.Model
 	mode        searchMode
 	langIndex   int
+	showLangMenu bool
+	langCursor  int
 	wordResults []jotoba.WordResult
 	kanjiResults []jotoba.KanjiResult
 	sentenceResults []jotoba.SentenceResult
@@ -77,6 +79,12 @@ var (
 	glowMid  = lipgloss.NewStyle().Foreground(darkGreen)
 	glowDim  = lipgloss.NewStyle().Foreground(darker)
 	glowBase = lipgloss.NewStyle().Foreground(darkest)
+
+	menuTitleStyle = lipgloss.NewStyle().Bold(true).Foreground(accent)
+	menuItemStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#e0e0e0"))
+	menuCursorStyle = lipgloss.NewStyle().Foreground(accent).Bold(true)
+	menuActiveStyle = lipgloss.NewStyle().Bold(true).Foreground(accent)
+	menuDimStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#737373"))
 )
 
 func New() tea.Model {
