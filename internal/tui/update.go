@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
+	"kurojs.com/jotoba-tui/internal/config"
 	"kurojs.com/jotoba-tui/internal/jotoba"
 )
 
@@ -53,8 +54,50 @@ type modeError struct{ msg string }
 
 func (e *modeError) Error() string { return e.msg }
 
+func hasResults(m model) bool {
+	return len(m.wordResults) > 0 || len(m.kanjiResults) > 0 || len(m.sentenceResults) > 0
+}
+
+func maxScroll(m model) int {
+	switch m.mode {
+	case modeWord:
+		if len(m.wordResults) == 0 {
+			return 0
+		}
+		return len(m.wordResults) - 1
+	case modeKanji:
+		if len(m.kanjiResults) == 0 {
+			return 0
+		}
+		return len(m.kanjiResults) - 1
+	case modeSentence:
+		if len(m.sentenceResults) == 0 {
+			return 0
+		}
+		return len(m.sentenceResults) - 1
+	default:
+		return 0
+	}
+}
+
+func resultCount(m model) int {
+	switch m.mode {
+	case modeWord:
+		return len(m.wordResults)
+	case modeKanji:
+		return len(m.kanjiResults)
+	case modeSentence:
+		return len(m.sentenceResults)
+	default:
+		return 0
+	}
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.termHeight = msg.Height
+
 	case tea.KeyMsg:
 		if m.showLangMenu {
 			return m.updateLangMenu(msg)
@@ -69,10 +112,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.kanjiResults = nil
 			m.sentenceResults = nil
 			m.err = nil
+			m.scrollOffset = 0
 			m.textInput.SetValue("")
 		case tea.KeyCtrlL:
 			m.showLangMenu = true
 			m.langCursor = m.langIndex
+		case tea.KeyUp:
+			if hasResults(m) && m.scrollOffset > 0 {
+				m.scrollOffset--
+			}
+		case tea.KeyDown:
+			if hasResults(m) && m.scrollOffset < maxScroll(m) {
+				m.scrollOffset++
+			}
 		case tea.KeyEnter:
 			query := strings.TrimSpace(m.textInput.Value())
 			if query != "" && !m.loading {
@@ -80,6 +132,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.wordResults = nil
 				m.kanjiResults = nil
 				m.sentenceResults = nil
+				m.scrollOffset = 0
 				m.loading = true
 				m.err = nil
 				return m, tea.Batch(
@@ -90,6 +143,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case searchResultMsg:
 		m.loading = false
+		m.scrollOffset = 0
 		switch msg.mode {
 		case modeWord:
 			if r, ok := msg.results.([]jotoba.WordResult); ok {
@@ -132,7 +186,9 @@ func (m model) updateLangMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.kanjiResults = nil
 		m.sentenceResults = nil
 		m.err = nil
+		m.scrollOffset = 0
 		m.textInput.SetValue("")
+		config.Save(&config.Config{Language: languages[m.langIndex]})
 	case tea.KeyUp:
 		if m.langCursor > 0 {
 			m.langCursor--

@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
+	"kurojs.com/jotoba-tui/internal/config"
 	"kurojs.com/jotoba-tui/internal/jotoba"
 )
 
@@ -47,6 +48,8 @@ type model struct {
 	langIndex   int
 	showLangMenu bool
 	langCursor  int
+	scrollOffset int
+	termHeight  int
 	wordResults []jotoba.WordResult
 	kanjiResults []jotoba.KanjiResult
 	sentenceResults []jotoba.SentenceResult
@@ -110,9 +113,19 @@ func New() tea.Model {
 		},
 	}
 
+	langIndex := 0
+	cfg := config.Load()
+	for i, lang := range languages {
+		if lang == cfg.Language {
+			langIndex = i
+			break
+		}
+	}
+
 	return model{
-		textInput: ti,
-		spinner:   s,
-		langIndex: 0,
+		textInput:  ti,
+		spinner:    s,
+		langIndex:  langIndex,
+		termHeight: 24,
 	}
 }

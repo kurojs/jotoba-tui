@@ -1,5 +1,7 @@
 package jotoba
 
+import "encoding/json"
+
 type WordResult struct {
 	Word     string
 	Reading  string
@@ -49,10 +51,34 @@ type jotobaKanjiResponse struct {
 	Kanji []jotobaKanji `json:"kanji"`
 }
 
+type translationMap map[string]string
+
+func (t *translationMap) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	if data[0] == '"' {
+		var s string
+		if err := json.Unmarshal(data, &s); err != nil {
+			return err
+		}
+		*t = translationMap{"en": s}
+		return nil
+	}
+
+	var m map[string]string
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+	*t = translationMap(m)
+	return nil
+}
+
 type jotobaSentence struct {
-	Content     string            `json:"content"`
-	Furigana    string            `json:"furigana"`
-	Translation map[string]string `json:"translation"`
+	Content     string          `json:"content"`
+	Furigana    string          `json:"furigana"`
+	Translation translationMap  `json:"translation"`
 }
 
 type jotobaSentencesResponse struct {

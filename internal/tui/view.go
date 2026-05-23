@@ -6,7 +6,11 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+
+	"kurojs.com/jotoba-tui/internal/jotoba"
 )
+
+const headerLines = 8
 
 func modeLabel(m searchMode) string {
 	switch m {
@@ -70,13 +74,15 @@ func (m model) View() string {
 		return b.String()
 	}
 
+	availLines := m.termHeight - headerLines
+
 	switch m.mode {
 	case modeWord:
-		m.renderWordResults(&b)
+		m.renderWordResults(&b, availLines)
 	case modeKanji:
-		m.renderKanjiResults(&b)
+		m.renderKanjiResults(&b, availLines)
 	case modeSentence:
-		m.renderSentenceResults(&b)
+		m.renderSentenceResults(&b, availLines)
 	}
 
 	b.WriteString("\n  ")
@@ -111,24 +117,80 @@ func (m model) renderLangMenu(b *strings.Builder) {
 	b.WriteString(menuDimStyle.Render("  Up/Down  select   Enter  confirm   Esc  cancel"))
 }
 
-func (m model) renderWordResults(b *strings.Builder) {
-	if len(m.wordResults) == 0 {
+func scrollInfo(total, from, to int) string {
+	return fmt.Sprintf("  %s", hintStyle.Render(fmt.Sprintf("(%d-%d/%d  Up/Down)", from+1, to+1, total)))
+}
+
+func resultLines(r any) int {
+	switch v := r.(type) {
+	case jotoba.WordResult:
+		return 1 + len(v.Meanings)
+	case jotoba.KanjiResult:
+		l := 1
+		if len(v.Kunyomi) > 0 {
+			l++
+		}
+		if len(v.Onyomi) > 0 {
+			l++
+		}
+		if v.Strokes > 0 || v.Grade > 0 {
+			l++
+		}
+		return l
+	case jotoba.SentenceResult:
+		l := 1
+		if v.Furigana != "" {
+			l++
+		}
+		l++
+		return l
+	default:
+		return 2
+	}
+}
+
+func (m model) renderWordResults(b *strings.Builder, maxLines int) {
+	total := len(m.wordResults)
+	if total == 0 {
 		b.WriteString("\n")
 		b.WriteString(hintStyle.Render("  Enter a Japanese word and press Enter to search"))
 		b.WriteString("\n")
 		return
 	}
 
+	offsets := make([]int, total)
+	lineCount := 1
 	for i, r := range m.wordResults {
-		if i > 0 {
-			b.WriteString("\n")
+		offsets[i] = lineCount
+		lineCount += 1 + len(r.Meanings)
+	}
+
+	end := total
+	for i := m.scrollOffset; i < total; i++ {
+		itemEnd := offsets[i] + 1 + len(m.wordResults[i].Meanings) - offsets[i]
+		if itemEnd > maxLines {
+			end = i
+			break
 		}
-		b.WriteString(fmt.Sprintf(
-			"  %s %s %s",
-			wordStyle.Render(r.Word),
-			hintStyle.Render("→"),
-			readingStyle.Render(r.Reading),
-		))
+	}
+
+	visible := m.wordResults[m.scrollOffset:end]
+
+	b.WriteString(scrollInfo(total, m.scrollOffset, m.scrollOffset+len(visible)-1))
+	b.WriteString("\n")
+
+	for _, r := range visible {
+		showReading := r.Reading != "" && r.Reading != r.Word
+		if showReading {
+			b.WriteString(fmt.Sprintf(
+				"  %s %s %s",
+				wordStyle.Render(r.Word),
+				hintStyle.Render("→"),
+				readingStyle.Render(r.Reading),
+			))
+		} else {
+			b.WriteString("  " + wordStyle.Render(r.Word))
+		}
 		b.WriteString("\n")
 		for _, meaning := range r.Meanings {
 			b.WriteString(meaningStyle.Render("  - " + meaning))
@@ -137,18 +199,34 @@ func (m model) renderWordResults(b *strings.Builder) {
 	}
 }
 
-func (m model) renderKanjiResults(b *strings.Builder) {
-	if len(m.kanjiResults) == 0 {
+func (m model) renderKanjiResults(b *strings.Builder, maxLines int) {
+	total := len(m.kanjiResults)
+	if total == 0 {
 		b.WriteString("\n")
 		b.WriteString(hintStyle.Render("  Enter a kanji or keyword and press Enter to search"))
 		b.WriteString("\n")
 		return
 	}
 
-	for i, r := range m.kanjiResults {
-		if i > 0 {
-			b.WriteString("\n")
+	end := total
+	used := 0
+	for i := m.scrollOffset; i < total; i++ {
+		l := resultLines(m.kanjiResults[i])
+		if used+l > maxLines {
+			end = i
+			break
 		}
+		used += l
+	}
+
+	visible := m.kanjiResults[m.scrollOffset:end]
+
+	if m.scrollOffset > 0 || end < total {
+		b.WriteString(scrollInfo(total, m.scrollOffset, m.scrollOffset+len(visible)-1))
+		b.WriteString("\n")
+	}
+
+	for _, r := range visible {
 		b.WriteString(fmt.Sprintf(
 			"  %s  %s",
 			kanjiCharStyle.Render(r.Character),
@@ -178,18 +256,33 @@ func (m model) renderKanjiResults(b *strings.Builder) {
 	}
 }
 
-func (m model) renderSentenceResults(b *strings.Builder) {
-	if len(m.sentenceResults) == 0 {
+func (m model) renderSentenceResults(b *strings.Builder, maxLines int) {
+	total := len(m.sentenceResults)
+	if total == 0 {
 		b.WriteString("\n")
 		b.WriteString(hintStyle.Render("  Enter a word and press Enter to search sentences"))
 		b.WriteString("\n")
 		return
 	}
 
-	for i, r := range m.sentenceResults {
-		if i > 0 {
-			b.WriteString("\n")
+	end := total
+	needed := 0
+	for i := m.scrollOffset; i < total; i++ {
+		needed += resultLines(m.sentenceResults[i])
+		if needed > maxLines {
+			end = i
+			break
 		}
+	}
+
+	visible := m.sentenceResults[m.scrollOffset:end]
+
+	if m.scrollOffset > 0 || end < total {
+		b.WriteString(scrollInfo(total, m.scrollOffset, m.scrollOffset+len(visible)-1))
+		b.WriteString("\n")
+	}
+
+	for _, r := range visible {
 		b.WriteString("  " + sentenceStyle.Render(r.Content))
 		b.WriteString("\n")
 		if r.Furigana != "" {
