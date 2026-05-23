@@ -7,11 +7,13 @@ Built with [Bubbletea](https://github.com/charmbracelet/bubbletea) and [Lipgloss
 ## Features
 
 - Three search modes: Words, Kanji, and Sentences (switch with Tab)
-- Word search: kanji display, kana reading, definitions in Spanish (with English fallback)
+- Word search: kanji display, kana reading, definitions in English (with 8 additional languages)
 - Kanji search: meanings, kunyomi, onyomi, stroke count, grade level
 - Sentence search: example sentences with furigana and translations
+- Language selector (Ctrl+L) with 9 languages — English, German, Spanish, French, Russian, Swedish, Dutch, Hungarian, Slovenian
+- Language preference persisted across sessions
+- Scrollable results with Up/Down
 - Automatic retry with exponential backoff on network errors
-- Spanish-first: shows Spanish glosses when available, falls back to English
 
 ## Installation
 
@@ -39,49 +41,47 @@ Type a Japanese word, kanji, or phrase and press Enter. Use Tab to cycle between
 
 ### Word search
 
-```
-  [Words]   Kanji   Sentences  (Tab to switch)
+![Words](https://i.imgur.com/Dzceyhx.png)
 
-  > 食べる
-
-  食べる → たべる
-    - comer, tomar
-    - to eat
-```
+Search by kanji or kana. Shows reading, definitions in the selected language, and scrollable results.
 
 ### Kanji search
 
-```
-  Words   [Kanji]   Sentences  (Tab to switch)
+![Kanji](https://i.imgur.com/O02KNM8.png)
 
-  > 食
-
-  食  eat, food
-    Kun: た.べる, く.う
-    On:  ショク, ジキ
-    9 strokes, grade 3
-```
+Look up kanji by character or keyword. Displays meaning, kunyomi, onyomi, stroke count, and grade level.
 
 ### Sentence search
 
-```
-  Words   Kanji   [Sentences]  (Tab to switch)
+![Sentences](https://i.imgur.com/zgxjO6c.png)
 
-  > 食べる
+Find example sentences with furigana and translations in the selected language.
 
-  私はりんごを食べます。
-  私[わたし] は りんご を 食べ[たべ]ます 。
-  -> I eat an apple.
-```
+## Language selection
 
-## Language preference
+Press Ctrl+L to open the language menu. 9 languages available:
 
-Results default to Spanish translations. If no Spanish gloss is available for a given word, the API falls back to English. This is controlled at the API level via the `language` parameter.
+**English** (default), German, Spanish, French, Russian, Swedish, Dutch, Hungarian, Slovenian
+
+The selected language persists across sessions via `~/.config/jotoba-tui/config.json`.
+
+Definitions default to English if no translation is available for the selected language.
+
+## Keys
+
+| Key | Action |
+|-----|--------|
+| Enter | Search |
+| Tab | Switch mode (Words/Kanji/Sentences) |
+| Ctrl+L | Language selector |
+| Up/Down | Scroll results |
+| Esc / Ctrl+C | Quit |
 
 ## Project structure
 
 ```
 cmd/jotoba/main.go       Entry point
+internal/config/          Persistent config (language)
 internal/jotoba/          API client and types
 internal/jotoba/client.go HTTP client with retry logic
 internal/jotoba/types.go  Shared response types
