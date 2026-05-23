@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-const baseURL = "https://jotoba.de/api"
+const baseURL = "https://jotoba.de"
 
 var httpClient = &http.Client{Timeout: 15 * time.Second}
 
